@@ -6,12 +6,13 @@ from django.urls import reverse
 
 
 from .models import Article, Comment, Poll, NewUser
-from .forms import LoginForm, CommentForm
+from .forms import LoginForm, CommentForm, RegisterForm
 
 
 
 # Create your views here.
 import markdown2
+import random
 
 def index(request):
     latest_article_list = Article.objects.query_by_time()
@@ -114,7 +115,7 @@ def get_keep(request, article_id):
         return redirect(url)
 
 @login_required
-def get_keep(request, article_id):
+def get_poll_article(request, article_id):
     logged_user = request.user
     article = Article.objects.get(id=article_id)
     polls = logged_user.poll_set.all()
@@ -132,4 +133,68 @@ def get_keep(request, article_id):
         poll.save()
         return redirect(reverse('focus:index'))
 
+def register(request):
+    error1 = "this name is already exist"
+    valid = "this name is valid"
+    charset = '!@#$%^&*(){}<>JIO'
+    random_val = ''.join([random.choice(charset) for x in range(20)])
+
+    if request.method == 'GET':
+        form = RegisterForm()
+        return render(request, 'register.html', {'form': form})
+    elif request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            email = form.cleaned_data['email']
+            password1 = form.cleaned_data['password1']
+            password2 = form.cleaned_data['password2']
+            if password1 != password2:
+                return render(request, 'register.html', {
+                    'form': form, 'msg': "two password is not equal"
+                })
+            else:
+                user = NewUser(username=username, email=email, password=password1)
+                user.save()
+
+                return redirect(reverse('focus:login'))
+        else:
+            return render(request, 'register.html', {'form': form})
+
+
+def register1(request):
+    error1 = "this name is already exist"
+    valid = "this name is valid"
+    charset = '!@#$%^&*(){}<>JIO'
+    random_val = ''.join([random.choice(charset) for x in range(20)])
+
+    if request.method == 'GET':
+        form = RegisterForm()
+        return render(request, 'register.html', {'form': form})
+    elif request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if request.POST.get('raw_username', random_val) != random_val:
+            try:
+                user = NewUser.objects.get(username=request.POST.get('raw_username', ''))
+            except ObjectDoesNotExist:
+                return render(request, 'register.html', {'form': form, 'msg': valid})
+            else:
+                return render(request, 'register.html', {'form': form, 'msg': error1})
+        else:
+            if form.is_valid():
+                username = form.cleaned_data['username']
+                email = form.cleaned_data['email']
+                password1 = form.cleaned_data['password1']
+                password2 = form.cleaned_data['password2']
+                if password1 != password2:
+                    return render(request, 'register.html', {
+                        'form': form, 'msg': "two password is not equal"
+                    })
+                else:
+                    user = NewUser(username=username, email=email, password=password1)
+                    user.save()
+
+                    return redirect(reverse('focus:login'))
+            else:
+                return render(request, 'register.html', {'form': form})
 
