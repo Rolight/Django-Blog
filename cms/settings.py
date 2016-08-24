@@ -31,6 +31,8 @@ AUTH_USER_MODEL = 'focus.NewUser'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+LOGIN_URL = "/focus/login/?next='article_id'"
+
 
 # Application definition
 

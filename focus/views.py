@@ -21,4 +21,40 @@ def index(request):
 
     return render(request, 'index.html', context)
 
+def log_in(request):
+    if request.method == 'GET':
+        form = LoginForm()
+        return render(request, 'login.html', {'form': form})
+    elif request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['uid']
+            password = form.cleaned_data['pwd']
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                url = request.POST.get('source_url', '/focus')
+                return redirect(url)
+            else:
+                return render(
+                    request,
+                    'login.html',
+                    {
+                        'form': form,
+                        'error': 'password or username is not true'
+                    }
+                )
+        else:
+            return render(
+                request,
+                'login.html',
+                {
+                    'form': form
+                }
+            )
 
+@login_required
+def log_out(request):
+    url = request.POST.get('source_url', '/focus/')
+    logout(request)
+    return redirect(url)
